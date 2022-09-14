@@ -13,15 +13,12 @@ public class KeyHandler implements KeyListener {
         if(code == KeyEvent.VK_W) {
             up = pressed;
         }
-
         if(code == KeyEvent.VK_S) {
             down = pressed;
         }
-
         if(code == KeyEvent.VK_A) {
             left = pressed;
         }
-
         if(code == KeyEvent.VK_D) {
             right = pressed;
         }
@@ -29,7 +26,7 @@ public class KeyHandler implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-
+        // UNUSED ATM
     }
 
     @Override

@@ -10,7 +10,7 @@ public class Launcher {
         window.setResizable(false);
         window.setTitle("2D Adventure");
 
-        GamePanel gamePanel = new GamePanel();
+        GamePanel gamePanel = new GamePanel(1920, 1080);
         window.add(gamePanel);
 
         window.pack();

@@ -1,27 +1,34 @@
 package com.llucrosell;
 
 import com.llucrosell.entity.Player;
+import com.llucrosell.graphics.Assets;
 import com.llucrosell.util.KeyHandler;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class GamePanel extends JPanel implements Runnable{
-    private static final int ORIGINAL_SIZE = 16;        // 16x16 tile
+    private static final int ORIGINAL_SIZE = 64;        // 16x16 tile
     private static final int SCALE = 3;
     public static final int TILE_SIZE = ORIGINAL_SIZE * SCALE;    // 48x48 tile
 
-    private final int SCREEN_MAX_COL = 16;
-    private final int SCREEN_MAX_ROW = 12;
-    private final int SCREEN_WIDTH = TILE_SIZE * SCREEN_MAX_COL;    // 768 pixels
-    private final int SCREEN_HEIGHT = TILE_SIZE * SCREEN_MAX_ROW;   // 576 pixels
+    private static final int SCREEN_MAX_COL = 16;
+    private static final int SCREEN_MAX_ROW = 12;
+    public static int SCREEN_WIDTH;
+    public static int SCREEN_HEIGHT;
 
     // SYSTEM
     private Thread gameThread;
-    private KeyHandler keyH = new KeyHandler();
-    private Player player = new Player(this, keyH);
+    private KeyHandler keyH;
+    private Player player;
+    private Assets assets;
 
-    public GamePanel() {
+    public GamePanel(int width, int height) {
+        SCREEN_WIDTH = width;
+        SCREEN_HEIGHT = height;
+
+        init();
+
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setDoubleBuffered(true);
@@ -32,6 +39,12 @@ public class GamePanel extends JPanel implements Runnable{
         startGameThread();
     }
 
+    private void init() {
+        keyH = new KeyHandler();
+        assets = new Assets();
+        player = new Player(this);
+    }
+
     private void startGameThread() {
         gameThread = new Thread(this, "2D Game");
         gameThread.start();
@@ -39,6 +52,10 @@ public class GamePanel extends JPanel implements Runnable{
 
     public void update() {
         player.update();
+    }
+
+    public void input(KeyHandler key) {
+        player.input(key);
     }
 
     public void paintComponent(Graphics g) {
@@ -70,6 +87,7 @@ public class GamePanel extends JPanel implements Runnable{
             last = now;
 
             if(delta >= 1) {
+                input(keyH);
                 update();
                 repaint();
                 delta--;
