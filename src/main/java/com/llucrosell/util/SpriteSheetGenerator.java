@@ -12,12 +12,12 @@ public class SpriteSheetGenerator {
     public static void main(String[] args) {
 
         // Can replace with args input
-        final String inputPath =  "assets/player/player_obj_walk";
-        final String outputPath = "src/main/resources/entity/player";
-        final String outputFile = "player_obj_walk.png";
+        final String inputPath =  "assets/textures/world";
+        final String outputPath = "src/main/resources/textures";
+        final String outputFile = "world.png";
         final int margin = 0;
-        final int cols = 4;
-        final int numSprites = 16;
+        final int cols = 6;
+        final int numSprites = 36;
 
         File imageFolder = new File(inputPath);
         File[] files = imageFolder.listFiles();

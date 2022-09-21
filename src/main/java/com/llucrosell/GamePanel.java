@@ -2,18 +2,25 @@ package com.llucrosell;
 
 import com.llucrosell.entity.Player;
 import com.llucrosell.graphics.Assets;
+import com.llucrosell.util.AABB;
+import com.llucrosell.world.TileManager;
+import com.llucrosell.ui.UI;
+import com.llucrosell.util.MapLoader;
 import com.llucrosell.util.KeyHandler;
+import com.llucrosell.world.World;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class GamePanel extends JPanel implements Runnable{
-    private static final int ORIGINAL_SIZE = 64;        // 16x16 tile
-    private static final int SCALE = 3;
-    public static final int TILE_SIZE = ORIGINAL_SIZE * SCALE;    // 48x48 tile
+    public static final int ORIGINAL_PLAYER_SIZE = 64;        // 16x16 tile
+    public static final int PLAYER_SCALE = 3;
+    public static final int PLAYER_SIZE = ORIGINAL_PLAYER_SIZE * PLAYER_SCALE;    // 48x48 tile
+    public static final int ORIGINAL_TILE_SIZE = 16;
+    public static final int TILE_SCALE = 3;
+    public static final int TILE_SIZE = ORIGINAL_TILE_SIZE * TILE_SCALE;
 
-    private static final int SCREEN_MAX_COL = 16;
-    private static final int SCREEN_MAX_ROW = 12;
+    public static final int CHUNK_SIZE = 16;
     public static int SCREEN_WIDTH;
     public static int SCREEN_HEIGHT;
 
@@ -21,11 +28,21 @@ public class GamePanel extends JPanel implements Runnable{
     private Thread gameThread;
     private KeyHandler keyH;
     private Player player;
-    private Assets assets;
+    private TileManager tm;
+    private UI ui;
+    private MapLoader mapLoader;
+    private World world;
+    private AABB aabb;
+    public static int oldFrameCount;
+
+    // WORLD SETTINGS
+    public final Dimension WORLD_DIMENSION;
 
     public GamePanel(int width, int height) {
         SCREEN_WIDTH = width;
         SCREEN_HEIGHT = height;
+        mapLoader = new MapLoader("src/main/resources/map/" , "map01.json");
+        WORLD_DIMENSION = new Dimension(MapLoader.tileMapWidth, MapLoader.tileMapHeight);
 
         init();
 
@@ -40,9 +57,13 @@ public class GamePanel extends JPanel implements Runnable{
     }
 
     private void init() {
-        keyH = new KeyHandler();
-        assets = new Assets();
+        world = new World(mapLoader.getChunksFromJSON());
+        keyH = new KeyHandler(this);
+        tm = new TileManager(this);
+        Assets.init();
         player = new Player(this);
+        ui = new UI(this);
+        aabb = new AABB();
     }
 
     private void startGameThread() {
@@ -63,7 +84,12 @@ public class GamePanel extends JPanel implements Runnable{
         Graphics2D g2 = (Graphics2D) g;
         g2.setColor(Color.white);
 
+        tm.render(g2);
         player.render(g2);
+
+        if(KeyHandler.debug) {
+            ui.debugInfo(g2);
+        }
 
         g2.dispose();
     }
@@ -79,6 +105,7 @@ public class GamePanel extends JPanel implements Runnable{
         double now;
         double timer = 0;
         int frameCount = 0;
+        oldFrameCount = 0;
 
         while(gameThread != null) {
             now = System.nanoTime();
@@ -95,10 +122,16 @@ public class GamePanel extends JPanel implements Runnable{
             }
 
             if(timer >= NANOSECOND) {
-                System.out.println("FPS: " + frameCount);
+                if(oldFrameCount != frameCount) {
+                    System.out.println("FPS: " + frameCount);
+                    oldFrameCount = frameCount;
+                }
                 frameCount = 0;
                 timer = 0;
             }
         }
     }
+
+    public Player getPlayer() { return player; }
+    public KeyHandler getKeyHandler() { return keyH; }
 }

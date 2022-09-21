@@ -1,13 +1,22 @@
 package com.llucrosell.util;
 
+import com.llucrosell.GamePanel;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 
 public class KeyHandler implements KeyListener {
 
-    public boolean up, down, left, right;
+    private GamePanel gp;
 
+    public boolean up, down, left, right;
+    public static boolean debug = false;
+
+
+    public KeyHandler(GamePanel gp) {
+        this.gp = gp;
+    }
 
     private void toggle(int code, boolean pressed) {
         if(code == KeyEvent.VK_W) {
@@ -36,6 +45,12 @@ public class KeyHandler implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
-        toggle(e.getKeyCode(), false);
+        if(e.getKeyCode() == KeyEvent.VK_H && e.isControlDown()) {
+            debug = !debug;
+        } else if(e.getKeyCode() == KeyEvent.VK_SPACE) {
+            System.out.println(gp.getPlayer().playerLocation());
+        } else {
+            toggle(e.getKeyCode(), false);
+        }
     }
 }

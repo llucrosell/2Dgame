@@ -1,5 +1,7 @@
 package com.llucrosell.graphics;
 
+import com.llucrosell.world.Tile;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,10 +10,11 @@ import java.util.HashMap;
 
 public class Assets {
 
-    private BufferedImage[][] player_idle, player_walk;
+    private static BufferedImage[][] player_idle, player_walk;
     public static HashMap<String, Animation> playerAnimation;
+    public static Tile[] tiles;
 
-    private String path;
+    private static String path;
 
     public static int PLAYER_UP = 3;
     public static int PLAYER_DOWN = 0;
@@ -19,19 +22,61 @@ public class Assets {
     public static int PLAYER_RIGHT = 2;
 
 
-    public Assets() {
-        System.out.print("[ASSETS]: Loading player sprites... ");
-
+    public static void init() {
+        System.out.print("[ASSETS]: Loading player sprites ... ");
         loadPlayerSprites();
+        if(compilePlayerSprites(playerAnimation)) {
+            System.out.println("DONE");
+        } else {
+            System.out.println("ERROR");
+        }
 
-        if(playerAnimation != null) {
+        System.out.print("[ASSETS]: Loading world tiles ... ");
+        loadTextures();
+        if(compileTextureSprites(tiles)) {
             System.out.println("DONE");
         } else {
             System.out.println("ERROR");
         }
     }
 
-    private void loadPlayerSprites() {
+    private static boolean compilePlayerSprites(HashMap<String, Animation> map) {
+        return (
+                        map.get("idle_up") != null &&
+                        map.get("idle_down") != null &&
+                        map.get("idle_left") != null &&
+                        map.get("idle_right") != null &&
+
+                        map.get("walk_up") != null &&
+                        map.get("walk_down") != null &&
+                        map.get("walk_left") != null &&
+                        map.get("walk_right") != null
+                );
+    }
+
+    private static boolean compileTextureSprites(Tile[] tiles) {
+        int counter = 0;
+        for(Tile tile : tiles) {
+            if(tile.image != null) {
+                counter++;
+            }
+        }
+        return counter == tiles.length;
+    }
+
+    private static BufferedImage loadSheet(String path, String name) {
+        BufferedImage img = null;
+        File f = new File(path + name);
+        try{
+            img = ImageIO.read(f);
+        } catch(IOException e) {
+            System.out.println("[ERROR]: Cannot read the file!");
+            e.printStackTrace();
+        }
+        return img;
+    }
+
+    private static void loadPlayerSprites() {
         path = "src/main/resources/entity/player/";
         playerAnimation = new HashMap<>();
 
@@ -50,19 +95,7 @@ public class Assets {
         playerAnimation.put("walk_right", new Animation(200, player_walk[PLAYER_RIGHT]));
     }
 
-    private BufferedImage loadSheet(String path, String name) {
-        BufferedImage img = null;
-        File f = new File(path + name);
-        try{
-            img = ImageIO.read(f);
-        } catch(IOException e) {
-            System.out.println("[ERROR]: Cannot read the file!");
-            e.printStackTrace();
-        }
-        return img;
-    }
-
-    private void loadPlayerSpritesFromSheet(BufferedImage[][] array, String name) {
+    private static void loadPlayerSpritesFromSheet(BufferedImage[][] array, String name) {
         BufferedImage sheet = loadSheet(path, name);
         if(sheet != null) {
             int size = array.length;
@@ -75,6 +108,32 @@ public class Assets {
             }
         } else {
             System.out.println("[ERROR]: Sprite sheet is null!");
+        }
+    }
+
+    private static void loadTextures() {
+        path = "src/main/resources/textures/";
+        tiles = new Tile[36];
+        loadTexturesFromSheet(tiles,16,"world.png");
+    }
+
+    private static void loadTexturesFromSheet(Tile[] array, int pxSize, String name) {
+        BufferedImage sheet = loadSheet(path, name);
+        if(sheet != null) {
+            int xSize = sheet.getWidth() / pxSize;
+            int ySize = sheet.getHeight() / pxSize;
+            int counter = 0;
+            for(int row = 0; row < ySize; row++) {
+                for(int col = 0; col < xSize; col++) {
+                    array[col + row * ySize] = new Tile(
+                            counter,
+                            sheet.getSubimage(col * pxSize, row * pxSize, pxSize, pxSize)
+                    );
+                    counter++;
+                }
+            }
+        } else {
+            System.out.println("[ERROR]: Textures sheet is null!");
         }
     }
 }

@@ -3,35 +3,54 @@ package com.llucrosell.entity;
 import com.llucrosell.GamePanel;
 import com.llucrosell.graphics.Animation;
 import com.llucrosell.graphics.Assets;
+import com.llucrosell.util.AABB;
 import com.llucrosell.util.KeyHandler;
+import com.llucrosell.util.MapLoader;
+import com.llucrosell.world.World;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 public class Player extends Entity{
-    private GamePanel gp;
-    private BufferedImage currentFrame;
 
+    private final GamePanel gp;
+    private BufferedImage currentFrame;
+    public final int SCREEN_X = GamePanel.SCREEN_WIDTH / 2 - GamePanel.PLAYER_SIZE / 2;
+    public final int SCREEN_Y = GamePanel.SCREEN_HEIGHT / 2 - GamePanel.PLAYER_SIZE / 2;
+    private int chunkX, chunkY;
+    private final Random random;
 
 
     public Player(GamePanel gp) {
         this.gp = gp;
+        random = new Random();
 
         setDefaultValues();
     }
 
     public void setDefaultValues() {
-        worldX = 100;
-        worldY = 100;
+        x = MapLoader.getSpawn().x * 3 + random.nextInt(GamePanel.TILE_SIZE);
+        y = MapLoader.getSpawn().y * 3 + random.nextInt(GamePanel.TILE_SIZE);
         dx = 0;
         dy = 0;
-        maxSpeed = 3f;
-        acc = 1.5f;
+        maxSpeed = 2.5f;
+        acc = 0.4f;
         deacc = 0.2f;
-        speed = 4;
+        hitbox = new Rectangle(
+                SCREEN_X + GamePanel.PLAYER_SIZE / 2 - GamePanel.TILE_SIZE / 2,
+                SCREEN_Y + GamePanel.PLAYER_SIZE / 2 - GamePanel.TILE_SIZE / 2,
+                GamePanel.TILE_SIZE,
+                GamePanel.TILE_SIZE
+        );
         direction = Assets.PLAYER_DOWN;
         currentFrame = Assets.playerAnimation.get("idle_down").getCurrentFrame();
     }
+
+    public Point playerLocation() { return new Point(x, y); }
+    public Point playerWorldLocation() { return new Point(worldX, worldY); }
+    public Point playerChunkLocation() { return new Point(chunkX, chunkY); }
+
 
     @Override
     public void tick() {
@@ -88,8 +107,14 @@ public class Player extends Entity{
 
     @Override
     public void update() {
-        worldX += dx;
-        worldY += dy;
+        x += dx;
+        y += dy;
+        worldX = x / GamePanel.TILE_SIZE;
+        worldY = y / GamePanel.TILE_SIZE;
+        chunkX = worldX / GamePanel.CHUNK_SIZE;
+        chunkY = worldY / GamePanel.CHUNK_SIZE;
+        if(x < 0) chunkX--;
+        if(y < 0) chunkY--;
 
         if(direction == Assets.PLAYER_UP) {
             if(dx == 0 && dy == 0) {
@@ -123,11 +148,30 @@ public class Player extends Entity{
             }
         }
 
+        AABB.getCollision(this, World.getChunkAt(new Point(chunkX, chunkY)).getCollisions());
+
         tick();
     }
 
     @Override
     public void render(Graphics2D g2) {
-        g2.drawImage(currentFrame, worldX, worldY, GamePanel.TILE_SIZE, GamePanel.TILE_SIZE, null);
+        g2.drawImage(
+                currentFrame,
+                SCREEN_X,
+                SCREEN_Y,
+                GamePanel.PLAYER_SIZE,
+                GamePanel.PLAYER_SIZE,
+                null
+        );
+        if(KeyHandler.debug) {
+            g2.setColor(new Color(200, 10, 10));
+            g2.setStroke(new BasicStroke());
+            g2.drawRect(
+                    hitbox.x,
+                    hitbox.y,
+                    hitbox.width,
+                    hitbox.height
+            );
+        }
     }
 }
